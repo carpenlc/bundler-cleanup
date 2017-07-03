@@ -18,3 +18,8 @@ This project consists of a single JEE Timer Bean that is used to manage disk spa
 # cd /var/local/bundler-cleanup/parent
 # mvn clean package
 ```
+* The pom.xml includes the Wildfly plugin definitions (see file ./parent/BundlerCleanup/pom.xml).  If you want to deploy it during the build process use the following Maven directive.
+```
+# cd /var/local/bundler-cleanup/parent
+# mvn clean package wildfly:deploy
+```
