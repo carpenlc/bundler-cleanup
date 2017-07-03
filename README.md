@@ -13,3 +13,8 @@ This project consists of a single JEE Timer Bean that is used to manage disk spa
 # cd ./bundler-cleanup/parent
 # mvn clean package
 ```
+* Invoke the build process.
+```
+# cd /var/local/bundler-cleanup/parent
+# mvn clean package
+```
