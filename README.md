@@ -1,5 +1,5 @@
 # bundler-cleanup
-Project used in conjunction with the bundler to clean up temporary files and directories.
+This project consists of a single JEE Timer Bean that is used to manage disk space associated with the staging area used by the bundler project.  
 
 ## Download and Build the Source
 * Minimum requirements:
@@ -10,5 +10,6 @@ Project used in conjunction with the bundler to clean up temporary files and dir
 ```
 # cd /var/local
 # git clone https://github.com/carpenlc/bundler-cleaup.git
+# cd ./bundler-cleanup/parent
 # mvn clean package
 ```
