@@ -153,27 +153,27 @@ public class CleanupTimerBean
                         
                         if (LOGGER.isDebugEnabled()) {
                             LOGGER.debug(method 
-                                    + "Checking directory ["
+                                    + "Checking directory [ "
                                     + file.getAbsolutePath()
-                                    + "].");
+                                    + " ].");
                         }
                         
                         if (delete(file)) {
                             try {
                                 LOGGER.info(method 
-                                        + "Deleting expired directory ["
+                                        + "Deleting expired directory [ "
                                         + file.getAbsolutePath()
-                                        + "].");
+                                        + " ].");
                                 FileUtils.delete(file);
                             }
                             catch (IOException ioe) {
                                 LOGGER.warn(method 
                                         + "An IOException was encountered while "
-                                        + "attempting to delete file ["
+                                        + "attempting to delete file [ "
                                         + file.getAbsolutePath()
-                                        + "].  Error encountered ["
+                                        + " ].  Error encountered [ "
                                         + ioe.getMessage()
-                                        + "].");
+                                        + " ].");
                             }
                         }
                     }

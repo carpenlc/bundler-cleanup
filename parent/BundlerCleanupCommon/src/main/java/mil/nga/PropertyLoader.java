@@ -21,12 +21,6 @@ import org.slf4j.LoggerFactory;
  * 
  * @author L. Craig Carpenter
  */
-// TODO:  Fix this issue...no matter what I tried I could not figure 
-// out how to deploy a properties file inside an Enterprise Archive (EAR)
-// that was readable by all of the applications contained in that EAR.
-// Next up was to create a module containing properties files as documented
-// by several blogs, however, that didn't work either.  We ended up 
-// implementing just reading from an external file.
 public class PropertyLoader {
 
     /**
@@ -60,9 +54,8 @@ public class PropertyLoader {
     /**
      * Alternate constructor allowing clients to supply the name of the target
      * properties file.
+     *
      * @param propertyFileName The name of the property file to load.
-     * @throws PropertiesNotLoadedException Thrown if the target properties file
-     * was not loaded.
      */
     public PropertyLoader(String propertyFileName) {
         setPropertyFileName(propertyFileName);
@@ -70,6 +63,7 @@ public class PropertyLoader {
     
     /**
      * Load the target properties file from the classpath.
+     *
      * @throws PropertiesNotLoadedException Thrown if the target properties 
      * file was not loaded.
      */
@@ -79,17 +73,47 @@ public class PropertyLoader {
         LOGGER.info("Initiating load of properties file [ "
                 + getPropertyFileName()
                 + " ].");
+
+        // Initialize the properties file
+        if (properties == null) {
+            properties = new Properties();
+        }
+
         try {
-            //stream = PropertyLoader.class
-            //        .getClassLoader()
-            //        .getResourceAsStream(getPropertyFileName());
-            //stream = ClassLoader.getSystemResourceAsStream(getPropertyFileName());
-            stream = new FileInputStream(new File(getPropertyFileName()));
-            if (properties == null) {
-                properties = new Properties();
+            // First, try to load the target properties file from the 
+            // classpath.
+            stream = PropertyLoader.class
+                    .getClassLoader()
+                    .getResourceAsStream(getPropertyFileName());
+            if (stream == null) {
+                LOGGER.warn("Unable to load target properties file [ "
+                    + getPropertyFileName()
+                    + " ] from the classpath.");
+                File f = new File(getPropertyFileName());
+                if (f.exists()) {
+                    stream = new FileInputStream(new File(getPropertyFileName()));
+                }
+                else {
+                    LOGGER.error("Target properties file [ "
+                        + getPropertyFileName() 
+                        + " ] does not exist.");
+                }
             }
+
+            // If the stream is still null, throw an exception
+            if (stream == null) {
+                throw new PropertiesNotLoadedException("Unable to access the "
+                    + "target properties file [ "
+                    + getPropertyFileName()
+                    + " ].  InputStream is null.");
+            }
+
             properties.load(stream);
-            
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.info("Successfully loaded the target properties file [ "
+                    + getPropertyFileName()
+                    + " ].");
+            }
         }
         catch (FileNotFoundException fnfe) {
             String msg = "Unexpected FileNotFoundException raised while "
@@ -118,12 +142,11 @@ public class PropertyLoader {
                 try { stream.close(); } catch (Exception e) {}
             }
         }
-        
-        
-    }
-    
+    } 
+
     /**
      * Getter method for the name of the target properties file.
+     *
      * @return The name of the target properties file.
      */
     public String getPropertyFileName() {
@@ -135,6 +158,7 @@ public class PropertyLoader {
     
     /**
      * Getter method for the system properties.
+     *
      * @return The populated system properties object. 
      * @throws PropertiesNotLoadedException Thrown if the target properties 
      * file was not loaded.
@@ -149,6 +173,7 @@ public class PropertyLoader {
     
     /**
      * Getter method for a single property.
+     *
      * @param key The key of the property to look up.
      * @throws PropertiesNotLoadedException Thrown if the target properties 
      * file was not loaded.
@@ -163,6 +188,7 @@ public class PropertyLoader {
     
     /**
      * Getter method for a single property.
+     *
      * @param key The key of the property to look up.
      * @param value The default value for the key.
      * @throws PropertiesNotLoadedException Thrown if the target properties 
@@ -178,6 +204,7 @@ public class PropertyLoader {
     
     /**
      * Setter method for the name of the target properties file.
+     *  
      * @param value The name of the target properties file.
      */
     public void setPropertyFileName(String value) {

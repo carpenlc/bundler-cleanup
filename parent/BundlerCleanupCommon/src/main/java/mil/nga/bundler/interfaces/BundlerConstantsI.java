@@ -92,7 +92,7 @@ public interface BundlerConstantsI {
     /**
      * The name of the properties file to load.
      */
-    public static final String PROPERTY_FILE_NAME = "/mnt/eng2/gateway/bundler/bundler.properties";
+    public static final String PROPERTY_FILE_NAME = "bundler.properties";
     
     /**
      * If this property is set, the bundler will serialize the input bundle 
