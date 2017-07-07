@@ -13,6 +13,7 @@
     <modules>
         <module>BundlerCleanupCommon</module>
         <module>BundlerCleanupEJB</module>
+        <module>BundlerCleanupWeb</module>
         <module>BundlerCleanup</module>
     </modules>
 
