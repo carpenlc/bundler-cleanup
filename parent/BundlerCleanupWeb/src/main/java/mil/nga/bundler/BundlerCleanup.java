@@ -87,7 +87,7 @@ public class BundlerCleanup implements BundlerConstantsI {
     @Path("/startCleanup")
     public String startCleanup() {
         
-        LOGGER.info("CleanupTimerBean launched at [ "
+        LOGGER.info("CleanupService manually launched at [ "
                 + FileUtils.getTimeAsString(
                         UNIVERSAL_DATE_STRING, 
                         System.currentTimeMillis())
@@ -100,7 +100,7 @@ public class BundlerCleanup implements BundlerConstantsI {
             return "Unable to look up timer service!";
         }
 
-        LOGGER.info("CleanupTimerBean complete at [ "
+        LOGGER.info("CleanupService manual launch complete at [ "
                 + FileUtils.getTimeAsString(
                         UNIVERSAL_DATE_STRING, 
                         System.currentTimeMillis())

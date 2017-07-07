@@ -24,4 +24,16 @@
                <module name="jcl-over-slf4j"/>
         </exclusions>
     </sub-deployment>
+    
+    <sub-deployment name="BundlerCleanupWeb.war">
+        <exclusions>
+            <module name="org.apache.commons.logging" /> 
+               <module name="org.slf4j" />
+               <module name="org.slf4j.ext" />
+               <module name="org.slf4j.impl" />
+               <module name="org.apache.log4j" /> 
+               <module name="org.jboss.logmanager"/> 
+               <module name="jcl-over-slf4j"/>
+        </exclusions>
+    </sub-deployment>
 </jboss-deployment-structure>
