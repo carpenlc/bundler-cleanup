@@ -11,7 +11,9 @@ import javax.ws.rs.core.Response.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import mil.nga.bundler.ejb.CleanupTimerBean;
+import mil.nga.bundler.ejb.CleanupService;
+import mil.nga.bundler.interfaces.BundlerConstantsI;
+import mil.nga.util.FileUtils;
 import mil.nga.util.HostNameUtils;
 
 /**
@@ -22,7 +24,7 @@ import mil.nga.util.HostNameUtils;
  * @author L. Craig Carpenter
  */
 @Path("")
-public class BundlerCleanup {
+public class BundlerCleanup implements BundlerConstantsI {
 
     /**
      * Set up the Log4j system for use throughout the class
@@ -37,24 +39,23 @@ public class BundlerCleanup {
     /**
      * Container-injected EJB reference.
      */
-    CleanupTimerBean timerBean;
+    @EJB
+    CleanupService cleanupService;
     
     /**
      * Private method used to obtain a reference to the target EJB.  
-     * 
-     * @return Reference to the CleanupTimerBean EJB.
+     * @return Reference to the JobService EJB.
      */
-    private CleanupTimerBean getTimerBean() {
-        if (timerBean == null) {
-            
+    private CleanupService getCleanupService() {
+        if (cleanupService == null) {
             LOGGER.warn("Application container failed to inject the "
-                    + "reference to CleanupTimerBean.  Attempting to "
+                    + "reference to [ CleanupService ].  Attempting to "
                     + "look it up via JNDI.");
-            timerBean = EJBClientUtilities
+            cleanupService = EJBClientUtilities
                     .getInstance()
-                    .getCleanupTimerBean();
+                    .getCleanupService();
         }
-        return timerBean;
+        return cleanupService;
     }
     
     /**
@@ -78,20 +79,34 @@ public class BundlerCleanup {
             
     }
     
+    /**
+     * REST endpoint allowing the cleanup process to be invoked via a web call.
+     * @return Simple string notifying when the cleanup process is completed.
+     */
     @GET
     @Path("/startCleanup")
     public String startCleanup() {
         
-            if (getTimerBean() != null) {
-                
-                getTimerBean().scheduledTimeout(null);
-                
-            }
-            else {
-                return "Unable to look up timer service!";
-            }
-        return "Done!";
+        LOGGER.info("CleanupTimerBean launched at [ "
+                + FileUtils.getTimeAsString(
+                        UNIVERSAL_DATE_STRING, 
+                        System.currentTimeMillis())
+                + " ].");
         
+        if (getCleanupService() != null) {
+            getCleanupService().cleanup();
+        }
+        else {
+            return "Unable to look up timer service!";
+        }
+
+        LOGGER.info("CleanupTimerBean complete at [ "
+                + FileUtils.getTimeAsString(
+                        UNIVERSAL_DATE_STRING, 
+                        System.currentTimeMillis())
+                + " ].");
+        
+        return "Done!";
     }
     
 }

@@ -1,10 +1,6 @@
 package mil.nga.bundler.ejb;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Calendar;
-import java.util.List;
-
+import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Timer;
@@ -12,9 +8,8 @@ import javax.ejb.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import mil.nga.bundler.FileNameGenerator;
+import mil.nga.bundler.EJBClientUtilities;
 import mil.nga.bundler.interfaces.BundlerConstantsI;
-import mil.nga.util.CaseInsensitiveDirFilter;
 import mil.nga.util.FileUtils;
 
 /**
@@ -31,86 +26,34 @@ public class CleanupTimerBean
     /**
      * Set up the Log4j system for use throughout the class
      */        
-    Logger LOGGER = LoggerFactory.getLogger(CleanupTimerBean.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(
+            CleanupTimerBean.class);
     
     /**
-     * The location of the staging area.
+     * Container-injected reference to the CleanupService object.
      */
-    private File stagingDirectory = null;
+    @EJB
+    CleanupService cleanupService;
     
     /**
-     * Default constructor. 
+     * Default no-arg constructor. 
      */
-    public CleanupTimerBean() {
-        
-        String method = "CleanupTimerBean.constructor() - ";
-        String dir    = FileNameGenerator.getInstance().getStagingDirectory();
-        
-        if ((dir != null) && (!dir.isEmpty())) {
-            stagingDirectory = new File(dir);
-            if (stagingDirectory.exists()) {
-                if (!stagingDirectory.isDirectory()) {
-                    
-                    LOGGER.error(method 
-                            + "The location identified by system property ["
-                            + STAGING_DIRECTORY_PROPERTY
-                            + "] value ["
-                            + dir 
-                            + "] defines a location that is not a directory.  "
-                            + "The cleanup service will not run.");
-                    stagingDirectory = null;
-                    
-                }
-            }
-            else {
-                
-                LOGGER.error(method 
-                        + "The location identified by system property ["
-                        + STAGING_DIRECTORY_PROPERTY
-                        + "] value ["
-                        + dir 
-                        + "] does not exist.  "
-                        + "The cleanup bean will not run.");
-                stagingDirectory = null;
-            }
+    public CleanupTimerBean() {  }
+    
+    /**
+     * Private method used to obtain a reference to the target EJB.  
+     * @return Reference to the JobService EJB.
+     */
+    private CleanupService getCleanupService() {
+        if (cleanupService == null) {
+            LOGGER.warn("Application container failed to inject the "
+                    + "reference to [ CleanupService ].  Attempting to "
+                    + "look it up via JNDI.");
+            cleanupService = EJBClientUtilities
+                    .getInstance()
+                    .getCleanupService();
         }
-        else {
-            LOGGER.error(method
-                    + "Unable to determine the location of the bundler "
-                    + "staging directory.  Please check the value of "
-                    + "property ["
-                    + STAGING_DIRECTORY_PROPERTY
-                    + "].  The cleanup bean will not run.");
-        }
-    }
-    
-    /**
-     * Calculate the time 48 hours ago.
-     * @return The time 48 hours ago.
-     */
-    private long getPurgeTime() {
-         Calendar cal = Calendar.getInstance();  
-         cal.add(Calendar.DAY_OF_MONTH, -2);  
-         return cal.getTimeInMillis(); 
-    }
-    
-    /**
-     * Determine whether or not the input file should be deleted.
-     * This method ensures the input file is a directory and falls 
-     * outside the date threshold.
-     * 
-     * @param file Candidate for deletion.
-     * @return True if the file should be deleted.  False otherwise.
-     */
-    private boolean delete(File file) {
-        boolean delete    = false;
-        long    purgeTime = getPurgeTime();
-        if ((file != null) && (file.exists()) && (file.isDirectory())) {
-            if (file.lastModified() < purgeTime) {
-                delete = true;
-            }
-        }
-        return delete;
+        return cleanupService;
     }
     
     /**
@@ -123,71 +66,16 @@ public class CleanupTimerBean
               dayOfMonth="*", month="*", year="*", info="CleanupTimer")
     private void scheduledTimeout(final Timer t) {
 
-        String       method  = "cleanup() - ";
-        List<String> regexes = FileNameGenerator.getRegEx();
-        
-        LOGGER.info(method  
-                + "Cleanup service launched at [ "
+        LOGGER.info("CleanupTimerBean launched at [ "
                 + FileUtils.getTimeAsString(UNIVERSAL_DATE_STRING, System.currentTimeMillis())
                 + " ].");
-            
-        if (stagingDirectory != null) {
-            for (String regex : regexes) {
-                
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(method  
-                            + "Checking for on-disk bundles to remove.  Using staging "
-                            + "directory ["
-                            + stagingDirectory.getAbsolutePath() 
-                            + "] and regex ["
-                            + regex
-                            + "].");
-                }
-                
-                File[] dirs  = stagingDirectory.listFiles(
-                                    new CaseInsensitiveDirFilter(regex));
-    
-                if ((dirs != null) && (dirs.length > 0)) {
-                    
-                    for (File file : dirs) {
-                        
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug(method 
-                                    + "Checking directory [ "
-                                    + file.getAbsolutePath()
-                                    + " ].");
-                        }
-                        
-                        if (delete(file)) {
-                            try {
-                                LOGGER.info(method 
-                                        + "Deleting expired directory [ "
-                                        + file.getAbsolutePath()
-                                        + " ].");
-                                FileUtils.delete(file);
-                            }
-                            catch (IOException ioe) {
-                                LOGGER.warn(method 
-                                        + "An IOException was encountered while "
-                                        + "attempting to delete file [ "
-                                        + file.getAbsolutePath()
-                                        + " ].  Error encountered [ "
-                                        + ioe.getMessage()
-                                        + " ].");
-                            }
-                        }
-                    }
-                }
-                else {
-                    LOGGER.info(method 
-                            + "There are no files in the staging directory.");
-                }
-            } // end loop: regex
+        
+        if (getCleanupService() != null) {
+            getCleanupService().cleanup();
         }
-        else {
-            LOGGER.error(method 
-                    + "Unable to determine the target staging directory.  "
-                    + "The cleanup service will not run.");
-        }
+
+        LOGGER.info("CleanupTimerBean complete at [ "
+                + FileUtils.getTimeAsString(UNIVERSAL_DATE_STRING, System.currentTimeMillis())
+                + " ].");
     }
 }
