@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <application xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/application_6.xsd" version="6">
-  <display-name>BundlerCleanup</display-name>
-  <module>
-    <ejb>BundlerCleanupEJB.jar</ejb>
-  </module>
-  <library-directory>lib</library-directory>
+    <display-name>BundlerCleanup</display-name>
+    <module>
+        <ejb>BundlerCleanupEJB.jar</ejb>
+    </module>
+    <module>
+        <web>
+            <web-uri>BundlerCleanupWeb.war</web-uri>
+            <context-root>BundlerCleanup</context-root>
+        </web>  
+    </module>
+    <library-directory>lib</library-directory>
 </application>
