@@ -27,6 +27,12 @@
             <type>ejb</type>
         </dependency>
         <dependency>
+            <groupId>mil.nga.bundler.web</groupId>
+            <artifactId>BundlerCleanupWeb</artifactId>
+            <version>${application.version}</version>
+            <type>war</type>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
@@ -67,6 +73,10 @@
                             <groupId>mil.nga.bundler.common</groupId>
                             <artifactId>BundlerCleanupCommon</artifactId>
                         </jarModule>
+                        <webModule>
+                            <groupId>mil.nga.bundler.web</groupId>
+                            <artifactId>BundlerCleanupWeb</artifactId>
+                        </webModule>
                         <jarModule>
                             <groupId>org.slf4j</groupId>
                             <artifactId>slf4j-api</artifactId>
