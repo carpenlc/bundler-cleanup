@@ -22,12 +22,13 @@ import mil.nga.util.FileUtils;
  */
 @Stateless
 @LocalBean
-public class CleanupService implements BundlerConstantsI {
+public class DiskCleanupService implements BundlerConstantsI {
 
     /**
      * Set up the Log4j system for use throughout the class
      */        
-    Logger LOGGER = LoggerFactory.getLogger(CleanupService.class);
+    private static final Logger LOGGER = 
+            LoggerFactory.getLogger(DiskCleanupService.class);
     
     /**
      * The location of the staging area.
@@ -79,9 +80,9 @@ public class CleanupService implements BundlerConstantsI {
     }
     
     /**
-     * Default constructor. 
+     * Default no-arg constructor. 
      */
-    public CleanupService() { }
+    public DiskCleanupService() { }
 
     /**
      * Calculate the time 48 hours ago.
@@ -112,6 +113,11 @@ public class CleanupService implements BundlerConstantsI {
         return delete;
     }
     
+    /**
+     * Public entry point for the session bean.  This method contains all of 
+     * the logic required to clean up the on-disk staging area utilized by 
+     * the Bundler application.  
+     */
     public void cleanup() {
         
         List<String> regexes = FileNameGenerator.getRegEx();

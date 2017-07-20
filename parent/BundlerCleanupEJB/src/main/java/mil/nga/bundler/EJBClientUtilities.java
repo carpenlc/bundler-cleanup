@@ -14,7 +14,7 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import mil.nga.bundler.ejb.CleanupService;
+import mil.nga.bundler.ejb.DiskCleanupService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -173,18 +173,18 @@ public class EJBClientUtilities {
      * @return The CleanupTimerBean interface, or null if we couldn't 
      * look it up.
      */
-    public CleanupService getCleanupService() {
+    public DiskCleanupService getCleanupService() {
         
-        CleanupService service = null;
-        Object           ejb     = getEJB(CleanupService.class);
+        DiskCleanupService service = null;
+        Object           ejb     = getEJB(DiskCleanupService.class);
         
         if (ejb != null) {
-            if (ejb instanceof mil.nga.bundler.ejb.CleanupService) {
-                service = (CleanupService)ejb;
+            if (ejb instanceof mil.nga.bundler.ejb.DiskCleanupService) {
+                service = (DiskCleanupService)ejb;
             }
             else {
                 LOGGER.error("Unable to look up EJB [ "
-                        + getJNDIName(CleanupService.class)
+                        + getJNDIName(DiskCleanupService.class)
                         + " ] returned reference was the wrong type.  "
                         + "Type returned [ "
                         + ejb.getClass().getCanonicalName()
@@ -193,7 +193,7 @@ public class EJBClientUtilities {
         }
         else {
             LOGGER.error("Unable to look up EJB [ "
-                    + getJNDIName(CleanupService.class)
+                    + getJNDIName(DiskCleanupService.class)
                     + " ] returned reference was null.");
         }
         return service;

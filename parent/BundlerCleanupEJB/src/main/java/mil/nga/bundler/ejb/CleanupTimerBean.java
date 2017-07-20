@@ -33,7 +33,7 @@ public class CleanupTimerBean
      * Container-injected reference to the CleanupService object.
      */
     @EJB
-    CleanupService cleanupService;
+    DiskCleanupService cleanupService;
     
     /**
      * Default no-arg constructor. 
@@ -44,7 +44,7 @@ public class CleanupTimerBean
      * Private method used to obtain a reference to the target EJB.  
      * @return Reference to the JobService EJB.
      */
-    private CleanupService getCleanupService() {
+    private DiskCleanupService getDiskCleanupService() {
         if (cleanupService == null) {
             LOGGER.warn("Application container failed to inject the "
                     + "reference to [ CleanupService ].  Attempting to "
@@ -67,15 +67,19 @@ public class CleanupTimerBean
     private void scheduledTimeout(final Timer t) {
 
         LOGGER.info("CleanupTimerBean launched at [ "
-                + FileUtils.getTimeAsString(UNIVERSAL_DATE_STRING, System.currentTimeMillis())
+                + FileUtils.getTimeAsString(
+                        UNIVERSAL_DATE_STRING, 
+                        System.currentTimeMillis())
                 + " ].");
         
-        if (getCleanupService() != null) {
-            getCleanupService().cleanup();
+        if (getDiskCleanupService() != null) {
+            getDiskCleanupService().cleanup();
         }
 
         LOGGER.info("CleanupTimerBean complete at [ "
-                + FileUtils.getTimeAsString(UNIVERSAL_DATE_STRING, System.currentTimeMillis())
+                + FileUtils.getTimeAsString(
+                        UNIVERSAL_DATE_STRING, 
+                        System.currentTimeMillis())
                 + " ].");
     }
 }
