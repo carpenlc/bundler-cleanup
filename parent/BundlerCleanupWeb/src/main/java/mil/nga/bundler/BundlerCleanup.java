@@ -11,7 +11,10 @@ import javax.ws.rs.core.Response.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import mil.nga.bundler.ejb.CleanupService;
+import mil.nga.bundler.ejb.EJBClientUtilities;
+import mil.nga.bundler.ejb.DatasourceCleanupService;
+import mil.nga.bundler.ejb.DiskCleanupService;
+import mil.nga.bundler.ejb.exceptions.EJBLookupException;
 import mil.nga.bundler.interfaces.BundlerConstantsI;
 import mil.nga.util.FileUtils;
 import mil.nga.util.HostNameUtils;
@@ -40,22 +43,46 @@ public class BundlerCleanup implements BundlerConstantsI {
      * Container-injected EJB reference.
      */
     @EJB
-    CleanupService cleanupService;
+    DiskCleanupService diskCleanupService;
+    
+    /**
+     * Container-injected EJB reference.
+     */
+    @EJB
+    DatasourceCleanupService datasourceCleanupService;
     
     /**
      * Private method used to obtain a reference to the target EJB.  
      * @return Reference to the JobService EJB.
      */
-    private CleanupService getCleanupService() {
-        if (cleanupService == null) {
+    private DiskCleanupService getDiskCleanupService() 
+            throws EJBLookupException {
+        if (diskCleanupService == null) {
             LOGGER.warn("Application container failed to inject the "
                     + "reference to [ CleanupService ].  Attempting to "
                     + "look it up via JNDI.");
-            cleanupService = EJBClientUtilities
+            diskCleanupService = EJBClientUtilities
                     .getInstance()
-                    .getCleanupService();
+                    .getDiskCleanupService();
         }
-        return cleanupService;
+        return diskCleanupService;
+    }
+    
+    /**
+     * Private method used to obtain a reference to the target EJB.  
+     * @return Reference to the JobService EJB.
+     */
+    private DatasourceCleanupService getDatasourceCleanupService() 
+            throws EJBLookupException {
+        if (datasourceCleanupService == null) {
+            LOGGER.warn("Application container failed to inject the "
+                    + "reference to [ CleanupService ].  Attempting to "
+                    + "look it up via JNDI.");
+            datasourceCleanupService = EJBClientUtilities
+                    .getInstance()
+                    .getDatasourceCleanupService();
+        }
+        return datasourceCleanupService;
     }
     
     /**
@@ -85,19 +112,23 @@ public class BundlerCleanup implements BundlerConstantsI {
      */
     @GET
     @Path("/startCleanup")
-    public String startCleanup() {
+    public Response startCleanup() {
         
         LOGGER.info("CleanupService manually launched at [ "
                 + FileUtils.getTimeAsString(
                         UNIVERSAL_DATE_STRING, 
                         System.currentTimeMillis())
                 + " ].");
-        
-        if (getCleanupService() != null) {
-            getCleanupService().cleanup();
+        try {
+            getDiskCleanupService().cleanup();
+            getDatasourceCleanupService().cleanup();
         }
-        else {
-            return "Unable to look up timer service!";
+        catch (EJBLookupException ele) {
+            LOGGER.error("Unexpected EJBLookupException raised while "
+                    + "attempting to look up EJB [ "
+                    + ele.getEJBName()
+                    + " ].");
+            Response.status(Status.NOT_FOUND).build();
         }
 
         LOGGER.info("CleanupService manual launch complete at [ "
@@ -106,7 +137,7 @@ public class BundlerCleanup implements BundlerConstantsI {
                         System.currentTimeMillis())
                 + " ].");
         
-        return "Done!";
+        return Response.status(Status.OK).entity("Done!").build();
     }
     
 }
