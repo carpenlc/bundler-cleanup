@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import mil.nga.bundler.ejb.exceptions.EJBLookupException;
-import mil.nga.bundler.ejb.interfaces.JobMetricsCollectorI;
 import mil.nga.bundler.ejb.jdbc.JDBCArchiveService;
 import mil.nga.bundler.ejb.jdbc.JDBCFileService;
 import mil.nga.bundler.ejb.jdbc.JDBCJobMetricsService;
