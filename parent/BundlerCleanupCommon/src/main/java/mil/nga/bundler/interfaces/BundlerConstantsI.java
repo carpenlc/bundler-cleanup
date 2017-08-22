@@ -74,6 +74,13 @@ public interface BundlerConstantsI {
             "bundler.exclude_path_prefix_";
     
     /**
+     * If this property is set, the bundler will serialize the input bundle 
+     * requests to disk.  This feature was implemented to support debugging.
+     */
+    public static final String BUNDLE_REQUEST_DIRECTORY_PROP = 
+            "bundler.request_output_location";
+    
+    /**
      * Rather arbitrary maximum number of prefix exclusions allowed.
      */
     public static final int MAX_NUM_EXCLUSIONS = 100;

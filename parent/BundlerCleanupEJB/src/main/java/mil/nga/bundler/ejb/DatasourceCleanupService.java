@@ -289,10 +289,11 @@ public class DatasourceCleanupService
     }
     
     /**
-     * Publicly exposed method called to invoke the datasource cleanup
-     * 
+     * Publicly exposed method called to invoke the datasource cleanup 
+     * operation.
      */
     public void cleanup() {
+        
         long startTime = System.currentTimeMillis();
         
         purgeOldJobRecords();

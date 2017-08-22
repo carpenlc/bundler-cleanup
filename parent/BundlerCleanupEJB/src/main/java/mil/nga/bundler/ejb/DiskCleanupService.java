@@ -59,12 +59,18 @@ public class DiskCleanupService
     private URI stagingDirectory = null;
     
     /**
+     * Location of all incoming requests.
+     */
+    private URI requestLogDirectory = null;
+    
+    /**
      * Initialization method used to populate the private internal 
      * stagingDirectory variable.
      */
     @PostConstruct
     public void init() {
         setStagingDirectory();
+        setRequestLogDirectory();
     }
     
     /**
@@ -194,15 +200,14 @@ public class DiskCleanupService
      * @return A list of Path objects that are sub-directories of the target 
      * staging area.
      */
-    public List<Path> getDirectoryListing() {
+    public List<Path> getDirectoryListing(URI parent) {
         
         List<Path> listing = new ArrayList<Path>();
-        
-        if (getStagingDirectory() != null) {
-            if (Files.exists(Paths.get(getStagingDirectory()))) {
+        if (parent != null) {
+            if (Files.exists(Paths.get(parent))) {
                 try (DirectoryStream<Path> directoryStream = 
                         Files.newDirectoryStream(
-                                Paths.get(getStagingDirectory()))) {
+                                Paths.get(parent))) {
                     for (Path path : directoryStream) {
                         listing.add(path);
                     }
@@ -211,7 +216,7 @@ public class DiskCleanupService
                     LOGGER.warn("An unexpected IOException was encountered "
                             + "while attempting to obtain a list of "
                             + "directory [ "
-                            + getStagingDirectory().toString()
+                            + parent.toString()
                             + " ].  Exception message [ "
                             + ioe.getMessage()
                             + " ].");
@@ -222,6 +227,8 @@ public class DiskCleanupService
                         + getStagingDirectory().toString()
                         + " ] does not exist.");
             }
+        
+
         }
         else {
             LOGGER.error("Target staging area not defined.  The disk cleanup "
@@ -231,14 +238,12 @@ public class DiskCleanupService
     }
     
     /**
-     * Public entry point for the session bean.  This method contains all of 
-     * the logic required to clean up the on-disk staging area utilized by 
-     * the Bundler application.  
+     * Method used to clean up old bundler jobs from the target staging area.
      */
-    public void cleanup() {
+    public void cleanupStagingDirectory() {
         
         int        count     = 0;
-        List<Path> listing   = getDirectoryListing();
+        List<Path> listing   = getDirectoryListing(getStagingDirectory());
         long      startTime = System.currentTimeMillis();
         
         if ((listing != null) && (listing.size() > 0)) { 
@@ -267,11 +272,122 @@ public class DiskCleanupService
     }
     
     /**
+     * Method used to clean up the request log directory.
+     */
+    public void cleanupRequestLogDirectory() {
+        
+        int        count     = 0;
+        List<Path> listing   = getDirectoryListing(getRequestLogDirectory());
+        long      startTime = System.currentTimeMillis();
+        
+        if ((listing != null) && (listing.size() > 0)) { 
+            for (Path p : listing) {
+                if (timeToDelete(p)) {
+                    count++;
+                    LOGGER.info("Deleting file [ "
+                            + p.toUri().toString()
+                            + " ].");
+                    delete(p);
+                }
+                else {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("File [ "
+                                + p.toUri().toString()
+                                + " ] not ready to delete.");
+                    }
+                }
+            }
+        }
+        LOGGER.info("Request log directory cleanup completed in [ "
+                + (System.currentTimeMillis() - startTime)
+                + " ] ms and removed [ "
+                + count
+                + " ] files.");
+    }
+    
+    /**
+     * Public entry point for the session bean.  This method contains all of 
+     * the logic required to clean up the on-disk staging area utilized by 
+     * the Bundler application.  
+     */
+    public void cleanup() {
+        
+        long startTime = System.currentTimeMillis();
+        if (getRequestLogDirectory() != null) {
+            cleanupRequestLogDirectory();
+        }
+        else {
+            LOGGER.info("Request log directory is not defined.  Cleanup "
+                    + "cannot proceed.");
+        }
+        if (getStagingDirectory() != null) {
+            cleanupStagingDirectory();
+        }
+        else {
+            LOGGER.info("Staging directory is not defined.  Cleanup operation "
+                    + "cannot proceed.");
+        }
+        
+        LOGGER.info("Disk cleanup process completed in [ "
+                + (System.currentTimeMillis() - startTime)
+                + " ].");
+    }
+    
+    /**
+     * Getter method for the location where the request logs are stored.
+     * @param value The URI for the location where the request logs are stored.
+     */
+    public URI getRequestLogDirectory() {
+        return requestLogDirectory;
+    }
+    
+    /**
      * Getter method for the location of the temporary staging directory.
      * @param value The URI for the temporary staging directory.
      */
     public URI getStagingDirectory() {
         return stagingDirectory;
+    }
+    
+    /**
+     * Setter method for the location of the temporary staging directory.
+     * @param value The temporary staging directory.
+     */
+    private void setRequestLogDirectory() 
+            throws IllegalArgumentException {
+        
+        String value = null;
+        
+        try {
+            value = getProperty(BUNDLE_REQUEST_DIRECTORY_PROP);
+            if ((value == null) || (value.isEmpty())) {
+                LOGGER.error("Value for staging directory is null or empty.  "
+                        + "Please check the value of property [ "
+                        + BUNDLE_REQUEST_DIRECTORY_PROP
+                        + " ].");
+            }
+            else {
+                requestLogDirectory = URI.create(value);
+            }
+        }
+        catch (IllegalArgumentException iae) {
+            LOGGER.error("Unexpected IllegalArgumentException raised while "
+                    + "attempting to convert the staging area location to "
+                    + " a URI.  Request log output directory location [ "
+                    + value
+                    + " ].  Exception message => [ "
+                    + iae.getMessage()
+                    + " ].");
+            requestLogDirectory = null;
+        }
+        catch (PropertiesNotLoadedException pnle) {
+            LOGGER.error("Unexpected PropertiesNotLoadedException raised while "
+                    + "attempting to obtain the system properties.  Please "
+                    + "check for the existance of property file [ "
+                    + PROPERTY_FILE_NAME
+                    + " ].");
+            stagingDirectory = null;
+        }
     }
     
     /**

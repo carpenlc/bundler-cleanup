@@ -32,6 +32,8 @@
         <commons.compress.version>1.5</commons.compress.version>
         <junit.version>4.12</junit.version>
 
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
         <maven-ear-plugin.version>2.10</maven-ear-plugin.version>
         <maven-ejb-plugin.version>2.3</maven-ejb-plugin.version>
         <maven-javadoc-plugin.version>2.10.4</maven-javadoc-plugin.version>

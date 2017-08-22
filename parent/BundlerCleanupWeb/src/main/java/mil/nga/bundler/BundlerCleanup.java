@@ -94,6 +94,7 @@ public class BundlerCleanup implements BundlerConstantsI {
     public Response isAlive(@Context HttpHeaders headers) {
         
         StringBuilder sb = new StringBuilder();
+        
         sb.append("Application [ ");
         sb.append(APPLICATION_NAME);
         sb.append(" ] on host [ ");
