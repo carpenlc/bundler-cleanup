@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import mil.nga.bundler.model.BundlerJobMetrics;
+import mil.nga.bundler.model.Job;
 import mil.nga.bundler.ejb.exceptions.EJBLookupException;
 import mil.nga.bundler.ejb.jdbc.JDBCJobService;
 import mil.nga.bundler.interfaces.BundlerConstantsI;
@@ -256,18 +257,32 @@ public class DatasourceCleanupService
             List<String> oldJobs = getJDBCJobService().getJobIDs(purgeTime);
             if ((oldJobs != null) && (oldJobs.size() > 0)) { 
                 for (String jobID : oldJobs) {
-                    if (hasMetrics(jobID)) {
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.info("Removing old job [ "
-                                    + jobID 
-                                    + " ].");
+                    
+                    // We found that somebody has been sending essentially 
+                    // empty requests to the bundler.  Additional code added 
+                    // here to clean them up.  
+                    Job job = getJDBCJobService().getMaterializedJob(jobID);
+                    if (job != null) {
+                        if ((job.getArchives() != null) || (job.getArchives().size() > 0)) {
+                            if (hasMetrics(jobID)) {
+                                if (LOGGER.isDebugEnabled()) {
+                                    LOGGER.info("Removing old job [ "
+                                            + jobID 
+                                            + " ].");
+                                }
+                                getJDBCJobService().delete(jobID);
+                            }
+                            else {
+                                LOGGER.warn("Job ID [ " + jobID + " ] is more than two "
+                                        + "weeks old, yet it does not have an associated "
+                                        + "metrics object.  Please investigate.");
+                             }
                         }
-                        getJDBCJobService().delete(jobID);
-                    }
-                    else {
-                       LOGGER.warn("Job ID [ " + jobID + " ] is more than two "
-                               + "weeks old, yet it does not have an associated "
-                               + "metrics object.  Please investigate.");
+                        else {
+                           LOGGER.warn("Removing empty job [ "
+                                   + jobID
+                                   + " ].");
+                        }
                     }
                 }
             }

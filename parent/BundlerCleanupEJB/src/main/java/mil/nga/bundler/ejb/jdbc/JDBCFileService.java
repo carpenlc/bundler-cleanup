@@ -76,6 +76,13 @@ public class JDBCFileService {
                 
                 try { 
                     
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Removing [ "
+                                + TABLE_NAME 
+                                + " ] records for Job ID [ "
+                                + jobID
+                                + " ].");
+                    }
                     conn = datasource.getConnection();
                     
                     // Note: If the container Datasource has jta=true this will throw
