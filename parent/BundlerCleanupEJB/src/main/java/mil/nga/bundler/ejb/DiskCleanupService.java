@@ -313,6 +313,7 @@ public class DiskCleanupService
     public void cleanup() {
         
         long startTime = System.currentTimeMillis();
+        LOGGER.info("Beginning disk cleanup process.");
         if (getRequestLogDirectory() != null) {
             cleanupRequestLogDirectory();
         }

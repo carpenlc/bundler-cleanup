@@ -152,7 +152,7 @@ public class DatasourceCleanupService
     private boolean hasMetrics(String jobID) {
         boolean hasMetrics = false;
         try {
-            if (getJDBCJobMetricsService().getJobMetrics(jobID) != null) {
+            if (getJDBCJobMetricsService().jobIDExists(jobID)) {
                 hasMetrics = true;
             }
         }

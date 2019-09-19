@@ -120,6 +120,62 @@ public class JDBCJobMetricsService {
         }
         return jobIDs;
     }
+    
+    /**
+     * See if a given job Id exists in the target data source.
+     * @param jobID Job ID to test
+     * @return True if the jobID exists in the metrics table.  False
+     * otherwise.
+     */
+    public boolean jobIDExists(String jobID) {
+    	
+    	boolean           exists = false;
+    	Connection        conn   = null;
+    	PreparedStatement stmt   = null;
+        ResultSet         rs     = null;
+        String            sql    = "select JOB_ID from "
+                + TABLE_NAME
+                + " where JOB_ID =  ? ";
+        
+        if (datasource != null) {
+            try {
+                
+                conn = datasource.getConnection();
+                stmt = conn.prepareStatement(sql);
+                stmt.setString(1, jobID);
+                rs   = stmt.executeQuery();
+                
+                if (rs.next()) {
+                    exists = true;
+                }
+            }
+            catch (SQLException se) {
+                LOGGER.error("An unexpected SQLException was raised while "
+                        + "attempting to determine whether JOB_ID [ "
+                		+ jobID
+                        + " ] exists.  Error message [ "
+                        + se.getMessage() 
+                        + " ].");
+            }
+            finally {
+                try { 
+                    if (rs != null) { rs.close(); } 
+                } catch (Exception e) {}
+                try { 
+                    if (stmt != null) { stmt.close(); } 
+                } catch (Exception e) {}
+                try { 
+                    if (conn != null) { conn.close(); } 
+                } catch (Exception e) {}
+            }
+        }
+        else {
+            LOGGER.warn("DataSource object not injected by the container.  "
+                    + "An empty List will be returned to the caller.");
+        }
+    	return exists;
+    }
+
     /**
      * This method will return a list of all 
      * <code>mil.nga.bundler.model.BundlerJobMetrics</code> objects currently 
